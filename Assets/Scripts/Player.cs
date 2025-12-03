@@ -44,7 +44,6 @@ public class Player : MonoBehaviour
         {
             SetJumping(false);
             SetDoubleJumped(false);
-            rb.linearVelocityY = 0;
         }
         MovePlayer();
         JumpPlayer();
