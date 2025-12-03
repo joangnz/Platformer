@@ -116,7 +116,8 @@ AnimatorState:
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: 4701661425457613468}
-  m_StateMachineBehaviours: []
+  m_StateMachineBehaviours:
+  - {fileID: 1794364227275837371}
   m_Position: {x: 50, y: 50, z: 0}
   m_IKOnFeet: 0
   m_WriteDefaultValues: 1
@@ -409,6 +410,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4bacfe60252c7e841ababf987b73ef31, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+--- !u!114 &1794364227275837371
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4bacfe60252c7e841ababf987b73ef31, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::JumpAnimation
 --- !u!1101 &2215115608508145112
 AnimatorStateTransition:
   m_ObjectHideFlags: 1
