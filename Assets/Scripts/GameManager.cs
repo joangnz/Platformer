@@ -3,7 +3,8 @@ using UnityEngine;
 public class GameManager : MonoBehaviour
 {
     [SerializeField] private Player playerPrefab;
-    public Player Player;
+    [SerializeField] private Camera Cam;
+    private Player Player;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -14,6 +15,6 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        Cam.transform.position = new(Player.transform.position.x, Player.transform.position.y +1, Cam.transform.position.z);
     }
 }
