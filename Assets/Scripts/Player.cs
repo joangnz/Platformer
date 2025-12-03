@@ -2,16 +2,17 @@ using UnityEngine;
 
 public class Player : MonoBehaviour
 {
+    private LayerMask groundLayer;
+
     // Components
-    private Rigidbody2D _rigidbody2D;
-    private Animator _animator;
+    private Rigidbody2D rb;
+    private Animator an;
 
     // Movement Parameters
-    private readonly float MoveSpeed = 50f;
+    private readonly float MoveSpeed = 10f;
     private float CurrentSpeed = 0f;
-    private readonly float JumpForce = 200f;
-    private readonly float Gravity = -9.81f;
-    private int JumpCount = 0;
+    private readonly float JumpForce = 15f;
+    private bool Jumped, DoubleJumped = false;
 
     // Idle Parameters
     private readonly float IdleTimeDefault = 7;
@@ -19,14 +20,15 @@ public class Player : MonoBehaviour
     private float IdleTime, SleepTime;
 
     // Boolean States
-    private bool _moving, _airborne = false;
-    private bool _grounded = true;
+    private bool _moving = false;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        _rigidbody2D = GetComponent<Rigidbody2D>();
-        _animator = GetComponent<Animator>();
+        groundLayer = LayerMask.GetMask("Ground");
+
+        rb = GetComponent<Rigidbody2D>();
+        an = GetComponent<Animator>();
 
         IdleTime = IdleTimeDefault;
         SleepTime = SleepTimeDefault;
@@ -35,25 +37,27 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        ReadInput();
+        CheckGrounded();
+        MovePlayer();
     }
 
     // Get/Set
     public float GetMoveSpeed() => MoveSpeed;
     public void SetCurrentSpeed(float speed) => CurrentSpeed = speed;
     public float GetCurrentSpeed() => CurrentSpeed;
-    public float getJumpForce() => JumpForce;
-    public int GetJumpCount() => JumpCount;
-    public void ResetJumpCount() => JumpCount = 0;
+    public float GetJumpForce() => JumpForce;
+    public bool GetJumped() => Jumped;
+    public void SetJumped(bool jumped) => Jumped = jumped;
+    public bool GetDoubleJumped() => DoubleJumped;
+    public void SetDoubleJumped(bool doubleJumped) => DoubleJumped = doubleJumped;
 
     // Animation Methods
     private void UpdateIdleAnimator()
     {
+        an.SetBool("idle", true);
         if (IdleTime <= 0)
         {
-            _animator.SetBool("west", false);
-            _animator.SetBool("east", false);
-            _animator.SetBool("south", true);
+            an.SetBool("idle2", true);
         }
 
         if (SleepTime <= 0) UpdateSleepAnimator(true);
@@ -61,29 +65,37 @@ public class Player : MonoBehaviour
 
     private void UpdateSleepAnimator(bool sleep)
     {
-        _animator.SetBool("sleep", sleep);
+        an.SetBool("sleep", sleep);
     }
 
     private void UpdateHorizontalAnimator(float xMove, bool moving)
     {
-        if (moving) _animator.SetBool("south", false);
+        if (moving) an.SetBool("idle", false);
+
+        Vector3 scale = transform.localScale;
 
         if (xMove > 0 )
-        {
-            _animator.SetBool("east", true);
-            _animator.SetBool("west", false);
-        } else
-        {
-            _animator.SetBool("east", false);
-            _animator.SetBool("west", true);
-        }
+            transform.localScale = new(Mathf.Abs(scale.x), scale.y, scale.z);
+        if (xMove < 0)
+            transform.localScale = new(-Mathf.Abs(scale.x), scale.y, scale.z);
     }
 
     // Methods
-    private void ReadInput()
+    private bool CheckGrounded()
+    {
+        Vector2 origin = new(transform.position.x, transform.position.y);
+
+        RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.down, 1.1f, LayerMask.GetMask("Ground"));
+        Collider2D ground = Physics2D.OverlapCircle(origin, 0.4f, groundLayer);
+
+        Debug.DrawRay(origin, Vector2.down * 1.1f, Color.green);
+        return hit.collider != null || ground != null;
+    }
+
+    private void MovePlayer()
     {
         if (!Input.anyKey) {
-            if (_animator.GetBool("sleep")) return;
+            if (an.GetBool("sleep")) return;
 
             IdleTime -= Time.deltaTime;
             SleepTime -= Time.deltaTime;
@@ -96,54 +108,19 @@ public class Player : MonoBehaviour
         SleepTime = SleepTimeDefault;
         UpdateSleepAnimator(false);
 
-        float xMove = GetHMove();
-        _moving = (xMove != 0f);
-        UpdateHorizontalAnimator(xMove, _moving);
-
-        float yMove = GetVMove();
-
-        _rigidbody2D.MovePosition(new Vector2(
-            xMove + transform.position.x,
-            yMove + transform.position.y
-            ));
-
-        // _rigidbody2D.AddForceY()
-
+        float xVelocity = GetXVelocity();
+        _moving = (xVelocity != 0f);
+        UpdateHorizontalAnimator(xVelocity, _moving);
+        Debug.Log(xVelocity);
+        rb.linearVelocityX = xVelocity;
     }
 
-    public float GetHMove()
+    public float GetXVelocity()
     {
-        return Input.GetAxis("Horizontal")*MoveSpeed*Time.deltaTime;
+        if (!Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D)) return 0f;
+
+        //int direction = Input.GetAxis("Horizontal") > 0 ? 1 : -1;
+        //return direction*MoveSpeed*Time.deltaTime;
+        return Input.GetAxis("Horizontal")*MoveSpeed;
     }
-
-    public float GetVMove()
-    {
-        if (Input.GetKey(KeyCode.Space))
-        {
-            if (_grounded) Jump(); else DoubleJump();
-
-            (_grounded, _airborne) = (_airborne, _grounded);
-
-            return JumpForce*Time.deltaTime;
-        }
-
-        return Gravity;
-    }
-
-    private void Jump()
-    {
-
-        JumpCount++;
-        return;
-    }
-
-    private void DoubleJump()
-    {
-        if (JumpCount >= 2) return;
-
-
-        JumpCount++;
-        return;
-    }
-
 }
