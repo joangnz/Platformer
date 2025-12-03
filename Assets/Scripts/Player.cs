@@ -1,3 +1,5 @@
+using System.Collections;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Player : MonoBehaviour
@@ -11,8 +13,9 @@ public class Player : MonoBehaviour
     // Movement Parameters
     private readonly float MoveSpeed = 10f;
     private float CurrentSpeed = 0f;
-    private readonly float JumpForce = 15f;
-    private bool Jumped, DoubleJumped = false;
+    private readonly float JumpForce = 10f;
+    private bool Jumping, DoubleJumped = false;
+    private bool Grounded = true;
 
     // Idle Parameters
     private readonly float IdleTimeDefault = 7;
@@ -37,8 +40,14 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        CheckGrounded();
+        if (CheckGrounded())
+        {
+            SetJumping(false);
+            SetDoubleJumped(false);
+            rb.linearVelocityY = 0;
+        }
         MovePlayer();
+        JumpPlayer();
     }
 
     // Get/Set
@@ -46,10 +55,12 @@ public class Player : MonoBehaviour
     public void SetCurrentSpeed(float speed) => CurrentSpeed = speed;
     public float GetCurrentSpeed() => CurrentSpeed;
     public float GetJumpForce() => JumpForce;
-    public bool GetJumped() => Jumped;
-    public void SetJumped(bool jumped) => Jumped = jumped;
+    public bool GetJumping() => Jumping;
+    public void SetJumping(bool jumping) => Jumping = jumping;
     public bool GetDoubleJumped() => DoubleJumped;
     public void SetDoubleJumped(bool doubleJumped) => DoubleJumped = doubleJumped;
+    public bool GetGrounded() => Grounded;
+    public void SetGrounded(bool grounded) => Grounded = grounded;
 
     // Animation Methods
     private void UpdateIdleAnimator()
@@ -83,13 +94,12 @@ public class Player : MonoBehaviour
     // Methods
     private bool CheckGrounded()
     {
-        Vector2 origin = new(transform.position.x, transform.position.y);
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, 0.6f, groundLayer);
+        bool grounded = hit.collider != null;
 
-        RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.down, 1.1f, LayerMask.GetMask("Ground"));
-        Collider2D ground = Physics2D.OverlapCircle(origin, 0.4f, groundLayer);
-
-        Debug.DrawRay(origin, Vector2.down * 1.1f, Color.green);
-        return hit.collider != null || ground != null;
+        Debug.DrawRay(transform.position, Vector2.down * 0.6f, Color.green);
+        SetGrounded(grounded);
+        return grounded;
     }
 
     private void MovePlayer()
@@ -111,16 +121,34 @@ public class Player : MonoBehaviour
         float xVelocity = GetXVelocity();
         _moving = (xVelocity != 0f);
         UpdateHorizontalAnimator(xVelocity, _moving);
-        Debug.Log(xVelocity);
         rb.linearVelocityX = xVelocity;
     }
 
-    public float GetXVelocity()
+    private float GetXVelocity()
     {
         if (!Input.GetKey(KeyCode.A) && !Input.GetKey(KeyCode.D)) return 0f;
 
-        //int direction = Input.GetAxis("Horizontal") > 0 ? 1 : -1;
-        //return direction*MoveSpeed*Time.deltaTime;
         return Input.GetAxis("Horizontal")*MoveSpeed;
+    }
+
+    private void JumpPlayer()
+    {
+        if (!Input.GetKey(KeyCode.Space)) SetJumping(false);
+
+        if (GetJumping()) return;
+
+        if (Input.GetKey(KeyCode.Space))
+        {
+            if (!GetGrounded())
+            {
+                if (GetDoubleJumped()) return;
+
+                SetDoubleJumped(true);
+            }
+
+            an.SetBool("jump", true);
+            SetJumping(true);
+            rb.linearVelocityY = JumpForce;
+        }
     }
 }
