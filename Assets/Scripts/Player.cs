@@ -8,6 +8,7 @@ public class Player : MonoBehaviour
 
     // Components
     private Rigidbody2D rb;
+    private SpriteRenderer sr;
     private Animator an;
 
     // Movement Parameters
@@ -31,6 +32,7 @@ public class Player : MonoBehaviour
         groundLayer = LayerMask.GetMask("Ground");
 
         rb = GetComponent<Rigidbody2D>();
+        sr = GetComponent<SpriteRenderer>();
         an = GetComponent<Animator>();
 
         IdleTime = IdleTimeDefault;
@@ -89,12 +91,10 @@ public class Player : MonoBehaviour
             an.SetBool("running", true);
         }
 
-        Vector3 scale = transform.localScale;
-
-        if (xMove > 0 )
-            transform.localScale = new(Mathf.Abs(scale.x), scale.y, scale.z);
+        if (xMove > 0)
+            sr.flipX = false;
         if (xMove < 0)
-            transform.localScale = new(-Mathf.Abs(scale.x), scale.y, scale.z);
+            sr.flipX = true;
     }
 
     // Methods
