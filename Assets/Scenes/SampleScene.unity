@@ -3389,6 +3389,16 @@ MonoBehaviour:
   bottom: {fileID: 1639962780}
   foreground: {fileID: 1362001656}
   deco: {fileID: 1091738065}
+  TLCorner: {fileID: 11400000, guid: 8633417624d577d4f852331a03f6f478, type: 2}
+  TRCorner: {fileID: 11400000, guid: 782883567b1c8ce4abc5c017059d4846, type: 2}
+  BLCorner: {fileID: 11400000, guid: 895ed903ec39a7b4595d80b52cb79c96, type: 2}
+  BRCorner: {fileID: 11400000, guid: 043aa4437079468489b6edfeef1d873e, type: 2}
+  TEdge: {fileID: 11400000, guid: 1b84548e562c9a846a9ee47752ca2f60, type: 2}
+  LEdge: {fileID: 11400000, guid: 29176c1e289900a4eabef41208d9a697, type: 2}
+  REdge: {fileID: 11400000, guid: c94112fcb8c36394c90ec602fd2c172e, type: 2}
+  BEdge: {fileID: 11400000, guid: cf5d775c0a24adb4c8ccad2fde32c551, type: 2}
+  Fill: {fileID: 11400000, guid: 92a1af61a5c220e48bdcffff4e5a2bf3, type: 2}
+  Ramp: {fileID: 0}
 --- !u!4 &1749146857
 Transform:
   m_ObjectHideFlags: 0
@@ -3413,7 +3423,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1749146855}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 61210f7d2db4475468a796d90d0a7dd2, type: 3}
+  m_Script: {fileID: 11500000, guid: 929e45c89804d6d47822ada07520e77a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
 --- !u!1660057539 &9223372036854775807
