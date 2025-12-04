@@ -65,6 +65,7 @@ public class Player : MonoBehaviour
     private void UpdateIdleAnimator()
     {
         an.SetBool("idle", true);
+        an.SetBool("running", false);
         if (IdleTime <= 0)
         {
             an.SetBool("idle2", true);
@@ -80,7 +81,13 @@ public class Player : MonoBehaviour
 
     private void UpdateHorizontalAnimator(float xMove, bool moving)
     {
-        if (moving) an.SetBool("idle", false);
+        if (moving)
+        {
+            an.SetBool("idle", false);
+            an.SetBool("idle2", false);
+            an.SetBool("sleep", false);
+            an.SetBool("running", true);
+        }
 
         Vector3 scale = transform.localScale;
 
@@ -115,7 +122,6 @@ public class Player : MonoBehaviour
 
         IdleTime = IdleTimeDefault;
         SleepTime = SleepTimeDefault;
-        UpdateSleepAnimator(false);
 
         float xVelocity = GetXVelocity();
         _moving = (xVelocity != 0f);
@@ -149,5 +155,11 @@ public class Player : MonoBehaviour
             SetJumping(true);
             rb.linearVelocityY = JumpForce;
         }
+    }
+
+    public void OnJumpEnd()
+    {
+        // Change the bool parameter in the Animator
+        an.SetBool("jump", false);
     }
 }

@@ -1,11 +1,13 @@
 using UnityEngine;
 
-public class JumpAnimation : StateMachineBehaviour
+public class AnimationEventHandler : MonoBehaviour
 {
-    // Possibly wrong
-    public override void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
+    public Animator an;
+
+    // This will be called by the animation event
+    public void OnAnimationEnd()
     {
-        base.OnStateExit(animator, stateInfo, layerIndex);
-        animator.ResetTrigger("Jump");
+        // Change the bool parameter in the Animator
+        an.SetBool("jump", false);
     }
 }
