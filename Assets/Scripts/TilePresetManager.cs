@@ -4,7 +4,7 @@ using System.Collections.Generic;
 public class TilePresetManager : MonoBehaviour
 {
     private readonly List<Vector2> PresetLocationsX = new() { new(25, 33), new(35, 38), new(40, 49), new(51, 54), new(56, 65) };
-    private readonly List<Vector2> PresetLocationsY = new() { new(0, -8), new(0, -8), new(0, -8), new(0, -3), new(0, -3) };
+    private readonly List<Vector2> PresetLocationsY = new() { new(0, -9), new(0, -9), new(0, -9), new(0, -3), new(0, -3) };
 
     public Vector2 GetPresetX(int i)
     {
