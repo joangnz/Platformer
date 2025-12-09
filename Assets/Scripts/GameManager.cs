@@ -19,6 +19,7 @@ public class GameManager : MonoBehaviour
         tp = GetComponent<TilePainter>();
         tp.Init(foreground, deco, TLCorner, TRCorner, BLCorner, BRCorner, TEdge, LEdge, REdge, BEdge, Fill, Ramp);
         Player = Instantiate(playerPrefab);
+        Player.Init(tp, Cam);
         Player.name = "Player";
     }
 
