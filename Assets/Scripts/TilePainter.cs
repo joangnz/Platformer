@@ -112,4 +112,10 @@ public class TilePainter : MonoBehaviour
     {
         Fg.SetTile((Vector3Int)pos, tileDict[tName]);
     }
+
+    // Possible Function to paint decorations later
+    private void PaintDeco(string tName, Vector2Int pos)
+    {
+
+    }
 }
