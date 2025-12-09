@@ -40,12 +40,12 @@ public class TilePainter : MonoBehaviour
         };
     }
 
-    private Vector2Int GetStartPos(Vector2 playerPos)
+    private Vector2Int GetStartPos(float playerX)
     {
-        Vector2 pos = playerPos;
+        Vector2 pos = new(playerX, 0);
 
         pos.x += 20;
-        pos.y += Random.Range(2, 6);
+        pos.y += Random.Range(1, 4);
         if (Random.value > 0.5f)
         {
             pos.y *= -1;
@@ -53,11 +53,11 @@ public class TilePainter : MonoBehaviour
         return Vector2Int.RoundToInt(pos);
     }
 
-    public void RandomPaint(Vector2 playerPos)
+    public void RandomPaint(float playerX)
     {
         int rows = -Random.Range(2, 11);
         int cols = Random.Range(4, 18);
-        Vector2Int startPos = GetStartPos(playerPos);
+        Vector2Int startPos = GetStartPos(playerX);
 
         lastCol = cols-1;
 
@@ -71,7 +71,7 @@ public class TilePainter : MonoBehaviour
                 if (y==0 && x==0) PaintTileOrRamp("TLCorner", curPos);
 
                 // First Row, Last Column
-                else if (y==0 && x==lastCol) PaintTile("BRCorner", curPos);
+                else if (y==0 && x==lastCol) PaintTile("TRCorner", curPos);
 
                 // First Row, Mid Columns
                 else if (y==0 && x<lastCol) PaintTileOrRamp("TEdge", curPos);
@@ -92,7 +92,7 @@ public class TilePainter : MonoBehaviour
                 else if (y<0 && x==lastCol) PaintTileOrRamp("REdge", curPos);
 
                 // Mid Rows, Mid Columns
-                else PaintTile("Fill", curPos);
+                else if (y<0 && x<lastCol) PaintTile("Fill", curPos);
             }
         }
     }
@@ -102,9 +102,19 @@ public class TilePainter : MonoBehaviour
         if (Random.value > 0.15f) PaintTile(tName, pos);
         else
         {
+            if (tName.Contains("Edge") || tName.Contains("Corner"))
+            {
+                if (tName.Contains("T")) PaintTile(tName, pos);
+                else  PaintTile("Fill", pos);
+
+                pos.x++;
+                x++;
+            }
+
             PaintTile("Ramp", pos);
             y--;
             lastCol = x;
+            x = -1;
         }
     }
 
