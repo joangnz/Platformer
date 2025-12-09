@@ -1,7 +1,5 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.InputSystem.LowLevel;
-using UnityEngine.Rendering.Universal;
 using UnityEngine.Tilemaps;
 
 public class TilePainter : MonoBehaviour
@@ -9,7 +7,7 @@ public class TilePainter : MonoBehaviour
     private Tilemap Fg, Deco;
     private Tile TLCorner, TRCorner, BLCorner, BRCorner, TEdge, LEdge, REdge, BEdge, Fill, Ramp;
     private Dictionary<string, Tile> tileDict;
-    private int lastCol, y, x;
+    private int lastCol, y, x, lastTileColumn;
     public void Init(Tilemap fg, Tilemap deco, Tile tlCorner, Tile trCorner, Tile blCorner, Tile brCorner, Tile tEdge, Tile lEdge, Tile rEdge, Tile bEdge, Tile fill, Tile ramp)
     {
         Fg = fg;
@@ -38,6 +36,8 @@ public class TilePainter : MonoBehaviour
             {"Fill", Fill },
             {"Ramp", Ramp }
         };
+
+        lastTileColumn = 0;
     }
 
     private Vector2Int GetStartPos(float playerX)
@@ -45,11 +45,13 @@ public class TilePainter : MonoBehaviour
         Vector2 pos = new(playerX, 0);
 
         pos.x += 20;
-        pos.y += Random.Range(1, 4);
+        pos.y += Random.Range(0, 3);
         if (Random.value > 0.5f)
         {
             pos.y *= -1;
         }
+
+        if (lastTileColumn <= pos.x) pos.x += 2;
         return Vector2Int.RoundToInt(pos);
     }
 
@@ -95,6 +97,8 @@ public class TilePainter : MonoBehaviour
                 else if (y<0 && x<lastCol) PaintTile("Fill", curPos);
             }
         }
+        Debug.Log(x);
+        lastTileColumn = x;
     }
 
     private void PaintTileOrRamp(string tName, Vector2Int pos)
@@ -127,5 +131,10 @@ public class TilePainter : MonoBehaviour
     private void PaintDeco(string tName, Vector2Int pos)
     {
 
+    }
+
+    public void DestroyTile(Vector2Int pos)
+    {
+        Fg.SetTile((Vector3Int)pos, null);
     }
 }
