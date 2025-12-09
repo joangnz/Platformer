@@ -1,10 +1,14 @@
 using System.Collections;
-using Unity.VisualScripting;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class Player : MonoBehaviour
 {
+    // Scene Management
     private LayerMask groundLayer;
+    private readonly int groundLayerId = 6;
+    private Camera cam;
+    private TilePainter tp;
 
     // Components
     private Rigidbody2D rb;
@@ -18,8 +22,9 @@ public class Player : MonoBehaviour
     private bool Jumping, DoubleJumped = false;
     private bool Grounded, Dashable = true;
     private bool Dashing = false;
+    private readonly float DashSpeed = 4f;
     private readonly float DashDuration = 0.1f;
-    private float DashCooldown = 1;
+    private readonly float DashCooldown = 1;
 
     // Idle Parameters
     private readonly float IdleTimeDefault = 7;
@@ -28,6 +33,12 @@ public class Player : MonoBehaviour
 
     // Boolean States
     private bool _moving = false;
+
+    public void Init(TilePainter tp, Camera cam)
+    {
+        this.tp = tp;
+        this.cam = cam;
+    }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -69,7 +80,9 @@ public class Player : MonoBehaviour
     public void SetDashable(bool dashable) => Dashable = dashable;
     public bool GetDashing() => Dashing;
     public void SetDashing(bool dashing) => Dashing = dashing;
+    public float GetDashSpeed() => DashSpeed;
     public float GetDashDuration() => DashDuration;
+    public float GetDashCooldown() => DashCooldown;
 
     // Animation Methods
     private void UpdateIdleAnimator()
@@ -98,6 +111,8 @@ public class Player : MonoBehaviour
             an.SetBool("sleep", false);
             an.SetBool("running", true);
         }
+
+        if (GetDashing()) an.SetBool("dash", true);
 
         if (xMove > 0)
             sr.flipX = false;
@@ -133,14 +148,18 @@ public class Player : MonoBehaviour
         SleepTime = SleepTimeDefault;
 
         // Dashing Logic
-        if (Input.GetKey(KeyCode.LeftShift) && GetDashable())
+        if (
+            Input.GetKey(KeyCode.LeftShift) &&
+            GetDashable() &&
+            (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D))
+            )
         {
             SetDashing(true);
             SetDashable(false);
             StartCoroutine(Dash());
         }
 
-        float dashMultiplier = GetDashing() ? 3f : 1f;
+        float dashMultiplier = GetDashing() ? DashSpeed : 1f;
 
         // Movement Logic
         float xVelocity = GetXVelocity();
@@ -179,14 +198,20 @@ public class Player : MonoBehaviour
 
     public void OnJumpEnd()
     {
-        // Change the bool parameter in the Animator
         an.SetBool("jump", false);
+    }
+
+    public void OnDashEnd()
+    {
+        an.SetBool("dash", false);
     }
 
     private IEnumerator Dash()
     {
+        cam.orthographicSize += 0.1f;
         yield return new WaitForSeconds(DashDuration);
         SetDashing(false);
+        cam.orthographicSize -= 0.1f;
         StartCoroutine(StartDashCooldown());
     }
 
@@ -197,5 +222,25 @@ public class Player : MonoBehaviour
     }
 
     // Add Collision + Dashing Detection
-    // private void OnCollisionEnter2D(Collision2D collision)
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.layer == groundLayerId && GetDashing())
+        {
+            Debug.Log("COLLIDED WITH GROUND");
+            Vector2Int pos = new((int)gameObject.transform.position.x, (int)gameObject.transform.position.y);
+            List<Vector2Int> contactPoints = new()
+            { 
+                pos,
+                new(pos.x+1, pos.y),
+                new(pos.x, pos.y+1),
+                new(pos.x-1, pos.y),
+                new(pos.x, pos.y-1)
+            };
+
+            foreach (Vector2Int point in contactPoints)
+            {
+                tp.DestroyTile(point);
+            }
+        }
+    }
 }
