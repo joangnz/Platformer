@@ -16,7 +16,10 @@ public class Player : MonoBehaviour
     private float CurrentSpeed = 0f;
     private readonly float JumpForce = 10f;
     private bool Jumping, DoubleJumped = false;
-    private bool Grounded = true;
+    private bool Grounded, Dashable = true;
+    private bool Dashing = false;
+    private readonly float DashDuration = 0.1f;
+    private float DashCooldown = 1;
 
     // Idle Parameters
     private readonly float IdleTimeDefault = 7;
@@ -62,6 +65,11 @@ public class Player : MonoBehaviour
     public void SetDoubleJumped(bool doubleJumped) => DoubleJumped = doubleJumped;
     public bool GetGrounded() => Grounded;
     public void SetGrounded(bool grounded) => Grounded = grounded;
+    public bool GetDashable() => Dashable;
+    public void SetDashable(bool dashable) => Dashable = dashable;
+    public bool GetDashing() => Dashing;
+    public void SetDashing(bool dashing) => Dashing = dashing;
+    public float GetDashDuration() => DashDuration;
 
     // Animation Methods
     private void UpdateIdleAnimator()
@@ -110,6 +118,7 @@ public class Player : MonoBehaviour
 
     private void MovePlayer()
     {
+        // Idle Logic
         if (!Input.anyKey) {
             if (an.GetBool("sleep")) return;
 
@@ -123,10 +132,21 @@ public class Player : MonoBehaviour
         IdleTime = IdleTimeDefault;
         SleepTime = SleepTimeDefault;
 
+        // Dashing Logic
+        if (Input.GetKey(KeyCode.LeftShift) && GetDashable())
+        {
+            SetDashing(true);
+            SetDashable(false);
+            StartCoroutine(Dash());
+        }
+
+        float dashMultiplier = GetDashing() ? 3f : 1f;
+
+        // Movement Logic
         float xVelocity = GetXVelocity();
         _moving = (xVelocity != 0f);
         UpdateHorizontalAnimator(xVelocity, _moving);
-        rb.linearVelocityX = xVelocity;
+        rb.linearVelocityX = xVelocity * dashMultiplier;
     }
 
     private float GetXVelocity()
@@ -162,4 +182,20 @@ public class Player : MonoBehaviour
         // Change the bool parameter in the Animator
         an.SetBool("jump", false);
     }
+
+    private IEnumerator Dash()
+    {
+        yield return new WaitForSeconds(DashDuration);
+        SetDashing(false);
+        StartCoroutine(StartDashCooldown());
+    }
+
+    private IEnumerator StartDashCooldown()
+    {
+        yield return new WaitForSeconds(DashCooldown);
+        SetDashable(true);
+    }
+
+    // Add Collision + Dashing Detection
+    // private void OnCollisionEnter2D(Collision2D collision)
 }
