@@ -14,7 +14,10 @@ public class Player : MonoBehaviour
     private Rigidbody2D rb;
     private SpriteRenderer sr;
     private Animator an;
+
+    // Colliders
     private BoxCollider2D ihc;
+    private CircleCollider2D nsc;
 
     // Movement Parameters
     private readonly float MoveSpeed = 10f;
@@ -30,6 +33,10 @@ public class Player : MonoBehaviour
     private bool Downslashable = false;
     private bool Downslashing = false;
     private readonly float DownslashSpeed = 4f;
+
+    private bool NightSlashing = false;
+    private bool NightSlashable = true;
+    private float NightSlashCooldown = 1f;
 
     // Idle Parameters
     private readonly float IdleTimeDefault = 7;
@@ -54,7 +61,11 @@ public class Player : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         sr = GetComponent<SpriteRenderer>();
         an = GetComponent<Animator>();
+
         ihc = GetComponentInChildren<BoxCollider2D>();
+        ihc.enabled = false;
+        nsc = GetComponentInChildren<CircleCollider2D>();
+        nsc.enabled = false;
 
         IdleTime = IdleTimeDefault;
         SleepTime = SleepTimeDefault;
@@ -101,6 +112,11 @@ public class Player : MonoBehaviour
     public bool GetDownslashing() => Downslashing;
     public void SetDownslashing(bool downslashing) => Downslashing = downslashing;
     public float GetDownslashSpeed() => DownslashSpeed;
+    public bool GetNightSlashable() => NightSlashable;
+    public void SetNightSlashable(bool nightSlashable) => NightSlashable = nightSlashable;
+    public bool GetNightSlashing() => NightSlashing;
+    public void SetNightSlashing(bool nightSlashing) => NightSlashing = nightSlashing;
+    public float GetNightSlashCooldown() => NightSlashCooldown;
 
 
     // Animation Methods
@@ -152,7 +168,11 @@ public class Player : MonoBehaviour
 
     private RaycastHit2D? CheckFront()
     {
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, sr.flipX ? Vector2.left : Vector2.right, 2f, groundLayer);
+        RaycastHit2D hit = Physics2D.Raycast(
+            sr.flipX ? transform.position : new(transform.position.x + 0.1f, transform.position.y, transform.position.z),
+            sr.flipX ? Vector2.left : Vector2.right,
+            2f,
+            groundLayer);
         Debug.DrawRay(transform.position, sr.flipX ? Vector2.left * 2f : Vector2.right * 2f, Color.green);
 
         if (hit.collider != null)
@@ -169,7 +189,15 @@ public class Player : MonoBehaviour
         if (hit != null)
         {
             Tilemap tilemap = hit.Value.collider.gameObject.GetComponent<Tilemap>();
-            Vector3Int cell = tilemap.WorldToCell(hit.Value.point);
+            if (tilemap == null) return;
+
+            Vector3 point = hit.Value.point;
+            
+            if (sr.flipX)
+            {
+                point.x -= 0.1f;
+            }
+            Vector3Int cell = tilemap.WorldToCell(point);
             Vector3 hitPos = tilemap.CellToWorld(cell);
             tp.DestroyTile(Vector2Int.FloorToInt(hitPos));
         }
@@ -207,13 +235,18 @@ public class Player : MonoBehaviour
                     Downslash(true);
                     SetDownslashing(true);
                     SetDownslashable(false);
-                } else if (!Input.GetKey(KeyCode.LeftControl) && GetDownslashing())
+                }
+                else if (!Input.GetKey(KeyCode.LeftControl) && GetDownslashing())
                 {
                     Downslash(false);
                     SetDownslashing(false);
                     SetDownslashable(true);
                 }
             }
+        }
+        else if (Input.GetKey(KeyCode.E))
+        {
+            if (GetNightSlashable() && !GetNightSlashing()) StartCoroutine(NightSlashRoutine());
         }
 
         float dashMultiplier = GetDashing() ? DashSpeed : 1f;
@@ -252,7 +285,8 @@ public class Player : MonoBehaviour
 
                 SetDoubleJumped(true);
                 an.SetBool("jump", false);
-            } else
+            }
+            else
             {
                 ToggleIronHead(true);
             }
@@ -287,6 +321,18 @@ public class Player : MonoBehaviour
     {
         yield return new WaitForSeconds(DashCooldown);
         SetDashable(true);
+    }
+
+    private IEnumerator NightSlashRoutine()
+    {
+        nsc.enabled = true;
+        SetNightSlashing(true);
+        SetNightSlashable(false);
+        yield return new WaitForSeconds(0.2f);
+        nsc.enabled = false;
+        SetNightSlashing(false);
+        yield return new WaitForSeconds(NightSlashCooldown);
+        SetNightSlashable(true);
     }
 
     private void Downslash(bool b)

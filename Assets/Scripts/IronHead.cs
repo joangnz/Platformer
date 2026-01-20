@@ -21,6 +21,7 @@ public class IronHead : MonoBehaviour
     private void OnTriggerEnter2D(Collider2D hit)
     {
         Tilemap tilemap = hit.gameObject.GetComponent<Tilemap>();
+        if (tilemap == null) return;
         Vector3Int cell = tilemap.WorldToCell(new(p.transform.position.x, p.transform.position.y + 1, p.transform.position.z));
         Vector3 hitPos = tilemap.CellToWorld(cell);
         tp.DestroyTile(Vector2Int.FloorToInt(hitPos));
