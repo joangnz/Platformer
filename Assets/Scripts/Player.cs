@@ -1,13 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Hierarchy;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 public class Player : MonoBehaviour
 {
     // Scene Management
     private LayerMask groundLayer;
-    private readonly int groundLayerId = 6;
     private Camera cam;
+    private float camOS;
     private TilePainter tp;
 
     // Components
@@ -26,6 +28,10 @@ public class Player : MonoBehaviour
     private readonly float DashDuration = 0.1f;
     private readonly float DashCooldown = 1;
 
+    private bool Downslashable = false;
+    private bool Downslashing = false;
+    private readonly float DownslashSpeed = 4f;
+
     // Idle Parameters
     private readonly float IdleTimeDefault = 7;
     private readonly float SleepTimeDefault = 35;
@@ -38,6 +44,7 @@ public class Player : MonoBehaviour
     {
         this.tp = tp;
         this.cam = cam;
+        camOS = this.cam.orthographicSize;
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -51,6 +58,8 @@ public class Player : MonoBehaviour
 
         IdleTime = IdleTimeDefault;
         SleepTime = SleepTimeDefault;
+
+
     }
 
     // Update is called once per frame
@@ -60,7 +69,11 @@ public class Player : MonoBehaviour
         {
             SetJumping(false);
             SetDoubleJumped(false);
+            SetDownslashing(false);
+            SetDownslashable(false);
+            Downslash(false);
         }
+
         MovePlayer();
         JumpPlayer();
     }
@@ -83,6 +96,12 @@ public class Player : MonoBehaviour
     public float GetDashSpeed() => DashSpeed;
     public float GetDashDuration() => DashDuration;
     public float GetDashCooldown() => DashCooldown;
+    public bool GetDownslashable() => Downslashable;
+    public void SetDownslashable(bool downslashable) => Downslashable = downslashable;
+    public bool GetDownslashing() => Downslashing;
+    public void SetDownslashing(bool downslashing) => Downslashing = downslashing;
+    public float GetDownslashSpeed() => DownslashSpeed;
+    
 
     // Animation Methods
     private void UpdateIdleAnimator()
@@ -131,6 +150,31 @@ public class Player : MonoBehaviour
         return grounded;
     }
 
+    private RaycastHit2D? CheckFront()
+    {
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, sr.flipX ? Vector2.left : Vector2.right, 2f, groundLayer);
+        Debug.DrawRay(transform.position, sr.flipX ? Vector2.left * 2f : Vector2.right * 2f, Color.green);
+
+        if (hit.collider != null)
+        {
+            return hit;
+        }
+
+        return null;
+    }
+
+    private void ApplyDash()
+    {
+        RaycastHit2D? hit = CheckFront();
+        if (hit != null)
+        {
+            Tilemap tilemap = hit.Value.collider.gameObject.GetComponent<Tilemap>();
+            Vector3Int cell = tilemap.WorldToCell(hit.Value.point);
+            Vector3 hitPos = tilemap.CellToWorld(cell);
+            tp.DestroyTile(Vector2Int.FloorToInt(hitPos));
+        }
+    }
+
     private void MovePlayer()
     {
         // Idle Logic
@@ -147,19 +191,25 @@ public class Player : MonoBehaviour
         IdleTime = IdleTimeDefault;
         SleepTime = SleepTimeDefault;
 
-        // Dashing Logic
-        if (
-            Input.GetKey(KeyCode.LeftShift) &&
-            GetDashable() &&
-            (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D))
-            )
+        if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D))
         {
-            SetDashing(true);
-            SetDashable(false);
-            StartCoroutine(Dash());
+            if (Input.GetKey(KeyCode.LeftShift) && GetDashable())
+            {
+                SetDashing(true);
+                SetDashable(false);
+                StartCoroutine(Dash());
+            }
+            else if (Input.GetKey(KeyCode.LeftControl) && GetDownslashable())
+            {
+                Downslash(true);
+                SetDownslashing(true);
+                SetDownslashable(false);
+            }
         }
 
         float dashMultiplier = GetDashing() ? DashSpeed : 1f;
+
+        if (GetDashing()) ApplyDash();
 
         // Movement Logic
         float xVelocity = GetXVelocity();
@@ -193,6 +243,7 @@ public class Player : MonoBehaviour
             an.SetBool("jump", true);
             SetJumping(true);
             rb.linearVelocityY = JumpForce;
+            SetDownslashable(true);
         }
     }
 
@@ -208,10 +259,10 @@ public class Player : MonoBehaviour
 
     private IEnumerator Dash()
     {
-        cam.orthographicSize += 0.1f;
+        cam.orthographicSize = camOS + 0.1f;
         yield return new WaitForSeconds(DashDuration);
         SetDashing(false);
-        cam.orthographicSize -= 0.1f;
+        cam.orthographicSize = camOS;
         StartCoroutine(StartDashCooldown());
     }
 
@@ -221,26 +272,19 @@ public class Player : MonoBehaviour
         SetDashable(true);
     }
 
-    // Add Collision + Dashing Detection
-    void OnCollisionEnter2D(Collision2D collision)
+    private void Downslash(bool b)
     {
-        if (collision.gameObject.layer == groundLayerId && GetDashing())
+        if (b)
         {
-            Debug.Log("COLLIDED WITH GROUND");
-            Vector2Int pos = new((int)gameObject.transform.position.x, (int)gameObject.transform.position.y);
-            List<Vector2Int> contactPoints = new()
-            { 
-                pos,
-                new(pos.x+1, pos.y),
-                new(pos.x, pos.y+1),
-                new(pos.x-1, pos.y),
-                new(pos.x, pos.y-1)
-            };
-
-            foreach (Vector2Int point in contactPoints)
-            {
-                tp.DestroyTile(point);
-            }
+            cam.orthographicSize = camOS + 0.1f;
+            rb.linearVelocityY = -0.1f;
+            rb.gravityScale = 4f;
         }
+        else
+        {
+            cam.orthographicSize = camOS;
+            rb.gravityScale = 2f;
+        }
+
     }
 }

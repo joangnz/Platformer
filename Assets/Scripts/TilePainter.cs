@@ -4,6 +4,7 @@ using UnityEngine.Tilemaps;
 
 public class TilePainter : MonoBehaviour
 {
+    [SerializeField] private int minCols, maxCols, minRows, maxRows;
     private Tilemap Fg, Deco;
     private Tile TLCorner, TRCorner, BLCorner, BRCorner, TEdge, LEdge, REdge, BEdge, Fill, Ramp;
     private Dictionary<string, Tile> tileDict;
@@ -57,8 +58,8 @@ public class TilePainter : MonoBehaviour
 
     public void RandomPaint(float playerX)
     {
-        int rows = -Random.Range(2, 11);
-        int cols = Random.Range(4, 18);
+        int rows = -Random.Range(minRows, maxRows);
+        int cols = Random.Range(minCols, maxCols);
         Vector2Int startPos = GetStartPos(playerX);
 
         lastCol = cols-1;
@@ -135,6 +136,7 @@ public class TilePainter : MonoBehaviour
 
     public void DestroyTile(Vector2Int pos)
     {
+        Debug.Log(pos);
         Fg.SetTile((Vector3Int)pos, null);
     }
 }

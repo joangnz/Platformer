@@ -3681,10 +3681,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 929e45c89804d6d47822ada07520e77a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  minCols: 4
-  maxCols: 14
-  minRows: 2
-  maxRows: 11
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
