@@ -1,6 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
-using Unity.Hierarchy;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -16,6 +14,7 @@ public class Player : MonoBehaviour
     private Rigidbody2D rb;
     private SpriteRenderer sr;
     private Animator an;
+    private BoxCollider2D ihc;
 
     // Movement Parameters
     private readonly float MoveSpeed = 10f;
@@ -55,11 +54,10 @@ public class Player : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         sr = GetComponent<SpriteRenderer>();
         an = GetComponent<Animator>();
+        ihc = GetComponentInChildren<BoxCollider2D>();
 
         IdleTime = IdleTimeDefault;
         SleepTime = SleepTimeDefault;
-
-
     }
 
     // Update is called once per frame
@@ -67,6 +65,7 @@ public class Player : MonoBehaviour
     {
         if (CheckGrounded())
         {
+            an.SetBool("jump", false);
             SetJumping(false);
             SetDoubleJumped(false);
             SetDownslashing(false);
@@ -79,6 +78,7 @@ public class Player : MonoBehaviour
     }
 
     // Get/Set
+    public TilePainter GetTilePainter() => tp;
     public float GetMoveSpeed() => MoveSpeed;
     public void SetCurrentSpeed(float speed) => CurrentSpeed = speed;
     public float GetCurrentSpeed() => CurrentSpeed;
@@ -101,7 +101,7 @@ public class Player : MonoBehaviour
     public bool GetDownslashing() => Downslashing;
     public void SetDownslashing(bool downslashing) => Downslashing = downslashing;
     public float GetDownslashSpeed() => DownslashSpeed;
-    
+
 
     // Animation Methods
     private void UpdateIdleAnimator()
@@ -178,7 +178,8 @@ public class Player : MonoBehaviour
     private void MovePlayer()
     {
         // Idle Logic
-        if (!Input.anyKey) {
+        if (!Input.anyKey)
+        {
             if (an.GetBool("sleep")) return;
 
             IdleTime -= Time.deltaTime;
@@ -199,11 +200,19 @@ public class Player : MonoBehaviour
                 SetDashable(false);
                 StartCoroutine(Dash());
             }
-            else if (Input.GetKey(KeyCode.LeftControl) && GetDownslashable())
+            else
             {
-                Downslash(true);
-                SetDownslashing(true);
-                SetDownslashable(false);
+                if (Input.GetKey(KeyCode.LeftControl) && GetDownslashable())
+                {
+                    Downslash(true);
+                    SetDownslashing(true);
+                    SetDownslashable(false);
+                } else if (!Input.GetKey(KeyCode.LeftControl) && GetDownslashing())
+                {
+                    Downslash(false);
+                    SetDownslashing(false);
+                    SetDownslashable(true);
+                }
             }
         }
 
@@ -227,7 +236,11 @@ public class Player : MonoBehaviour
 
     private void JumpPlayer()
     {
-        if (!Input.GetKey(KeyCode.Space)) SetJumping(false);
+        if (!Input.GetKey(KeyCode.Space))
+        {
+            SetJumping(false);
+            ToggleIronHead(false);
+        }
 
         if (GetJumping()) return;
 
@@ -238,6 +251,10 @@ public class Player : MonoBehaviour
                 if (GetDoubleJumped()) return;
 
                 SetDoubleJumped(true);
+                an.SetBool("jump", false);
+            } else
+            {
+                ToggleIronHead(true);
             }
 
             an.SetBool("jump", true);
@@ -278,7 +295,7 @@ public class Player : MonoBehaviour
         {
             cam.orthographicSize = camOS + 0.1f;
             rb.linearVelocityY = -0.1f;
-            rb.gravityScale = 4f;
+            rb.gravityScale = 8f;
         }
         else
         {
@@ -286,5 +303,10 @@ public class Player : MonoBehaviour
             rb.gravityScale = 2f;
         }
 
+    }
+
+    private void ToggleIronHead(bool t)
+    {
+        ihc.enabled = t;
     }
 }

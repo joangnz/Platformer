@@ -52,7 +52,7 @@ public class TilePainter : MonoBehaviour
             pos.y *= -1;
         }
 
-        if (lastTileColumn <= pos.x) pos.x += 2;
+        if (lastTileColumn <= pos.x) pos.x += 5;
         return Vector2Int.RoundToInt(pos);
     }
 
@@ -71,13 +71,13 @@ public class TilePainter : MonoBehaviour
                 Vector2Int curPos = new(startPos.x + x, startPos.y + y);
 
                 // First Row, First Column
-                if (y==0 && x==0) PaintTileOrRamp("TLCorner", curPos);
+                if (y==0 && x==0) PaintTileOrRamp("TLCorner", curPos, ref cols);
 
                 // First Row, Last Column
                 else if (y==0 && x==lastCol) PaintTile("TRCorner", curPos);
 
                 // First Row, Mid Columns
-                else if (y==0 && x<lastCol) PaintTileOrRamp("TEdge", curPos);
+                else if (y==0 && x<lastCol) PaintTileOrRamp("TEdge", curPos, ref cols);
 
                 // Last Row, First Column
                 else if (y==rows+1 && x==0) PaintTile("BLCorner", curPos);
@@ -92,17 +92,16 @@ public class TilePainter : MonoBehaviour
                 else if (y<0 && x==0) PaintTile("LEdge", curPos);
 
                 // Mid Rows, Last Column
-                else if (y<0 && x==lastCol) PaintTileOrRamp("REdge", curPos);
+                else if (y<0 && x==lastCol) PaintTileOrRamp("REdge", curPos, ref cols);
 
                 // Mid Rows, Mid Columns
                 else if (y<0 && x<lastCol) PaintTile("Fill", curPos);
             }
         }
-        Debug.Log(x);
         lastTileColumn = x;
     }
 
-    private void PaintTileOrRamp(string tName, Vector2Int pos)
+    private void PaintTileOrRamp(string tName, Vector2Int pos, ref int cols)
     {
         if (Random.value > 0.15f) PaintTile(tName, pos);
         else
@@ -120,6 +119,7 @@ public class TilePainter : MonoBehaviour
             y--;
             lastCol = x;
             x = -1;
+            cols++;
         }
     }
 
