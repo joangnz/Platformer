@@ -1,18 +1,21 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
-public class NightSlashAoE : MonoBehaviour
+public class NightSlash : MonoBehaviour
 {
+    private CircleCollider2D circleCol;
+
     private Player p;
     private TilePainter tp;
 
-    private CircleCollider2D circleCol;
+    private readonly float baseRad = 0.7f;
 
     void Start()
     {
+        circleCol = GetComponent<CircleCollider2D>();
+
         p = GetComponentInParent<Player>();
         tp = p.GetTilePainter();
-        circleCol = GetComponent<CircleCollider2D>();
     }
 
     private void OnTriggerEnter2D(Collider2D hit)
@@ -21,7 +24,7 @@ public class NightSlashAoE : MonoBehaviour
         if (tilemap == null) return;
 
         Vector3 center = p.transform.position;
-        float radius = circleCol.radius * Mathf.Max(p.transform.localScale.x, p.transform.localScale.y);
+        float radius = baseRad * Mathf.Max(p.transform.localScale.x, p.transform.localScale.y);
 
         Vector3Int min = tilemap.WorldToCell(center - new Vector3(radius, radius));
         Vector3Int max = tilemap.WorldToCell(center + new Vector3(radius, radius));

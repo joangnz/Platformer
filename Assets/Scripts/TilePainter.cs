@@ -136,7 +136,6 @@ public class TilePainter : MonoBehaviour
 
     public void DestroyTile(Vector2Int pos)
     {
-        Debug.Log(pos);
         Fg.SetTile((Vector3Int)pos, null);
     }
 }

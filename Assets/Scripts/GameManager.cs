@@ -5,16 +5,16 @@ using UnityEngine.Tilemaps;
 public class GameManager : MonoBehaviour
 {
     [SerializeField] private Player playerPrefab;
+    [SerializeField] private Enemy enemyPrefab;
     [SerializeField] private Camera Cam;
     [SerializeField] private BoxCollider2D bottom;
     [SerializeField] private Tilemap foreground, deco;
     [SerializeField] private Tile TLCorner, TRCorner, BLCorner, BRCorner, TEdge, LEdge, REdge, BEdge, Fill, Ramp;
     private SpriteRenderer background;
     private TilePainter tp;
-    private List<int> spawnedPositions = new();
+    private List<int> islandSpawnedPositions = new();
 
     private Player Player;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         tp = GetComponent<TilePainter>();
@@ -27,7 +27,6 @@ public class GameManager : MonoBehaviour
         Player.name = "Player";
     }
 
-    // Update is called once per frame
     void Update()
     {
         Vector3 pp = Player.transform.position;
@@ -38,10 +37,22 @@ public class GameManager : MonoBehaviour
 
         Vector2Int playerPos = Vector2Int.RoundToInt(pp);
 
-        if (playerPos.x % 10 == 0 && !spawnedPositions.Contains(playerPos.x))
+        if (playerPos.x % 10 == 0)
         {
-            tp.RandomPaint(pp.x);
-            spawnedPositions.Add(playerPos.x);
+            if (!islandSpawnedPositions.Contains(playerPos.x))
+            {
+                tp.RandomPaint(pp.x);
+                islandSpawnedPositions.Add(playerPos.x);
+
+                SpawnEnemy(pp);
+            }
         }
+    }
+
+    private void SpawnEnemy(Vector3 pp)
+    {
+        Vector3 enemySpawnPos = new(pp.x + 8f, Enemy.StartY, 0);
+        Enemy enemy = Instantiate(enemyPrefab, enemySpawnPos, Quaternion.identity);
+        enemy.name = "Enemy";
     }
 }

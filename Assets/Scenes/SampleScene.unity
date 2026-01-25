@@ -3641,6 +3641,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   playerPrefab: {fileID: 4904614966895916735, guid: 0f653439243bca64482685d766dc8145, type: 3}
+  enemyPrefab: {fileID: -2460730435016957672, guid: b24803f369e94f0478bf2dca122a4207, type: 3}
   Cam: {fileID: 519420031}
   bottom: {fileID: 1639962780}
   foreground: {fileID: 1362001656}

@@ -15,6 +15,9 @@ public class Player : MonoBehaviour
     private SpriteRenderer sr;
     private Animator an;
 
+    private NightSlash ns;
+    private SpriteRenderer nssr;
+
     // Colliders
     private BoxCollider2D ihc;
     private CircleCollider2D nsc;
@@ -53,6 +56,12 @@ public class Player : MonoBehaviour
         camOS = this.cam.orthographicSize;
     }
 
+    private void Awake()
+    {
+        ns = gameObject.GetComponentInChildren<NightSlash>();
+        nssr = ns.GetComponent<SpriteRenderer>();
+    }
+
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -61,6 +70,8 @@ public class Player : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         sr = GetComponent<SpriteRenderer>();
         an = GetComponent<Animator>();
+
+        nssr.enabled = false;
 
         ihc = GetComponentInChildren<BoxCollider2D>();
         ihc.enabled = false;
@@ -257,7 +268,13 @@ public class Player : MonoBehaviour
         float xVelocity = GetXVelocity();
         _moving = (xVelocity != 0f);
         UpdateHorizontalAnimator(xVelocity, _moving);
-        rb.linearVelocityX = xVelocity * dashMultiplier;
+        // if force is right and lvx is less than velocity, apply force
+        // if force is left and lvx is more than velocity, apply force
+        if ((xVelocity > 0 && rb.linearVelocityX < xVelocity * dashMultiplier) 
+            || (xVelocity < 0 && rb.linearVelocityX > xVelocity * dashMultiplier)) {
+            rb.AddForceX(xVelocity * dashMultiplier);
+        }
+        //rb.linearVelocityX = xVelocity * dashMultiplier;
     }
 
     private float GetXVelocity()
@@ -325,12 +342,16 @@ public class Player : MonoBehaviour
 
     private IEnumerator NightSlashRoutine()
     {
+        nssr.enabled = true;
         nsc.enabled = true;
         SetNightSlashing(true);
         SetNightSlashable(false);
+
         yield return new WaitForSeconds(0.2f);
         nsc.enabled = false;
+        nssr.enabled = false;
         SetNightSlashing(false);
+
         yield return new WaitForSeconds(NightSlashCooldown);
         SetNightSlashable(true);
     }
